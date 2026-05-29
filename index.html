@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Songster</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M17 32 C17 10 47 10 47 32' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round'/><rect x='11' y='30' width='9' height='14' rx='4' fill='white'/><rect x='44' y='30' width='9' height='14' rx='4' fill='white'/><line x1='7' y1='34' x2='7' y2='40' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.55'/><line x1='4' y1='31' x2='4' y2='43' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.35'/><line x1='1' y1='28' x2='1' y2='46' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.18'/><line x1='57' y1='34' x2='57' y2='40' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.55'/><line x1='60' y1='31' x2='60' y2='43' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.35'/><line x1='63' y1='28' x2='63' y2='46' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.18'/></svg>" />
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M17 32 C17 10 47 10 47 32' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round'/><rect x='11' y='30' width='9' height='14' rx='4' fill='white'/><rect x='44' y='30' width='9' height='14' rx='4' fill='white'/><line x1='7' y1='34' x2='7' y2='40' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.55'/><line x1='4' y1='31' x2='4' y2='43' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.35'/><line x1='1' y1='28' x2='1' y2='46' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.18'/><line x1='57' y1='34' x2='57' y2='40' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.55'/><line x1='60' y1='31' x2='60' y2='43' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.35'/><line x1='63' y1='28' x2='63' y2='46' stroke='white' stroke-width='2' stroke-linecap='round' opacity='.18'/></svg>" />
+<meta name="theme-color" content="#1db954" />
+<link rel="stylesheet" href="src/styles.css" />
+</head>
+<body>
+
+<!-- ============== FEATURES TEMPLATE (shared by auth screen + About modal) ============== -->
+<template id="tpl-features">
+  <div class="feat">
+    <div class="feat-ic"><svg class="icon"><use href="#i-lib"/></svg></div>
+    <div class="feat-body">
+      <div class="feat-t">Pick any Spotify playlist</div>
+      <div class="feat-s">Browse your own playlists, search public ones, or paste any Spotify playlist URL.</div>
+    </div>
+  </div>
+  <div class="feat">
+    <div class="feat-ic"><svg class="icon"><use href="#i-play"/></svg></div>
+    <div class="feat-body">
+      <div class="feat-t">Listen</div>
+      <div class="feat-s">A random track from the playlist plays. Can you identify it?</div>
+    </div>
+  </div>
+  <div class="feat">
+    <div class="feat-ic"><svg class="icon"><use href="#i-question"/></svg></div>
+    <div class="feat-body">
+      <div class="feat-t">Guess & Reveal</div>
+      <div class="feat-s">Make your guess — year, artist, title, or whatever your group plays for — then reveal the answer.</div>
+    </div>
+  </div>
+  <div class="feat">
+    <div class="feat-ic"><svg class="icon"><use href="#i-trophy"/></svg></div>
+    <div class="feat-body">
+      <div class="feat-t">Gamification</div>
+      <div class="feat-s">Compete in teams: Stake coins on each answer — nail it and multiply your stake, miss it and lose them. Who ends up with the most</div>
+    </div>
+  </div>
+  <hr style="border-color:rgba(255,255,255,.15);margin:4px 0">
+  <div class="feat">
+    <div class="feat-ic feat-ic-note"><svg class="icon"><use href="#i-info"/></svg></div>
+    <div class="feat-body">
+      <div class="feat-t">Errors and omissions excepted</div>
+      <div class="feat-s">Song info comes straight from Spotify. Older tracks may carry the year of a re-release instead of the original — so a 1973 song might show as 2014.</div>
+    </div>
+  </div>
+</template>
+
+<!-- ============== SVG ICON DEFS ============== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path fill="currentColor" d="M10.59 13.41a1 1 0 0 1 0-1.41l4-4a3 3 0 0 1 4.24 4.24l-1.41 1.42-1.42-1.42 1.42-1.41a1 1 0 1 0-1.42-1.42l-4 4a1 1 0 0 1-1.41 0M13.41 10.59a1 1 0 0 1 0 1.41l-4 4a3 3 0 1 1-4.24-4.24l1.41-1.42 1.42 1.42-1.42 1.41a1 1 0 1 0 1.42 1.42l4-4a1 1 0 0 1 1.41 0"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></symbol>
+    <symbol id="i-forward" viewBox="0 0 24 24"><path fill="currentColor" d="M4 11h12.17l-5.58-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path fill="currentColor" d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path fill="currentColor" d="M18 6l-8.5 6L18 18V6zM6 6h2v12H6z"/></symbol>
+    <symbol id="i-ff" viewBox="0 0 24 24"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></symbol>
+    <symbol id="i-rew" viewBox="0 0 24 24"><path fill="currentColor" d="M11 18V6l-8.5 6L11 18zm.5-6 8.5 6V6l-8.5 6z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 5 1.49-1.5zM4.5 9.5A5 5 0 1 1 9.5 14.5 5 5 0 0 1 4.5 9.5"/></symbol>
+    <symbol id="i-block" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 18a8 8 0 0 1-6.32-12.91L16.91 18.32A7.96 7.96 0 0 1 12 20m6.32-3.09L7.09 5.68A7.96 7.96 0 0 1 12 4a8 8 0 0 1 6.32 12.91"/></symbol>
+    <symbol id="i-question" viewBox="0 0 24 24"><path fill="currentColor" d="M11 18h2v-2h-2v2m1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m0-14a4 4 0 0 0-4 4h2a2 2 0 1 1 4 0c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5a4 4 0 0 0-4-4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path fill="currentColor" d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42l-.38 2.65c-.61.25-1.18.58-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98L2.45 14.63a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1c.51.4 1.08.73 1.69.98l.38 2.65c.05.24.26.42.5.42h4c.24 0 .45-.18.5-.42l.38-2.65c.61-.25 1.18-.58 1.69-.98l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64L19.43 13M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7"/></symbol>
+    <symbol id="i-lib" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3z"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path fill="currentColor" d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6m3-10H5V5h10z"/></symbol>
+    <symbol id="i-del" viewBox="0 0 24 24"><path fill="currentColor" d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"/></symbol>
+    <symbol id="i-disconn" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m4 11H8v-2h8z"/></symbol>
+    <symbol id="i-err" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m1 15h-2v-2h2zm0-4h-2V7h2z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path fill="currentColor" d="M9 16h6v-6h4l-7-7-7 7h4zM5 18h14v2H5z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m1 15h-2v-6h2zm0-8h-2V7h2z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7zM5 18h14v2H5z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11z"/></symbol>
+    <symbol id="i-fullscreen" viewBox="0 0 24 24"><path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></symbol>
+    <symbol id="i-fullscreen-exit" viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path fill="currentColor" d="M19 5h-2V3H7v2H5C3.9 5 3 5.9 3 7v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H9v2h6v-2h-2v-2.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2M5 8V7h2v3.82C5.84 10.4 5 9.3 5 8m14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============== AUTH SCREEN ============== -->
+<section id="screen-auth" class="screen active">
+  <div class="hero-bg fixed-bg" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 6 64 40" class="brand-svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="lgDisc" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#1db954"/>
+                <stop offset="100%" stop-color="#2575fc"/>
+              </linearGradient>
+            </defs>
+            <!-- headphone arc -->
+            <path d="M17 32 C17 10 47 10 47 32" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+            <!-- left ear cup -->
+            <rect x="11" y="30" width="9" height="14" rx="4" fill="white"/>
+            <!-- right ear cup -->
+            <rect x="44" y="30" width="9" height="14" rx="4" fill="white"/>
+            <!-- left vibration lines (3, getting wider outward) -->
+            <line x1="7"  y1="34" x2="7"  y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+            <line x1="4"  y1="31" x2="4"  y2="43" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+            <line x1="1"  y1="28" x2="1"  y2="46" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+            <!-- right vibration lines (3, getting wider outward) -->
+            <line x1="57" y1="34" x2="57" y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+            <line x1="60" y1="31" x2="60" y2="43" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+            <line x1="63" y1="28" x2="63" y2="46" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+          </svg>
+        </div>
+        <h1 class="brand-title">SONGSTER</h1>
+        <div class="brand-tag">Guess song information</div>
+      </div>
+
+      <div class="features" data-features-host></div>
+
+      <!-- Spotify Developer App config (collapsible) -->
+      <details id="spotify-config-details" class="spotify-config-details">
+        <summary>How to use your own Spotify Developer App</summary>
+        <div class="spotify-config-body">
+          <p class="muted">
+            Spotify limits apps in Development Mode to 25 registered users.
+            If you're playing with more people, create your own free Spotify Developer App and enter your Client ID below — then everyone can connect without being added manually.
+          </p>
+          <ol class="spotify-config-steps muted">
+            <li>Go to <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a> and create a new app.</li>
+            <li>Enable the <strong>Web API</strong> and <strong>Web Playback SDK</strong> APIs.</li>
+            <li>In the app settings, add this Redirect URI:<br>
+              <code class="redirect-uri-box">https://thorsten-klein.github.io/universal-callback/index.html</code><button id="btn-copy-redirect" class="copy-uri-btn" title="Copy to clipboard"><svg class="icon" style="width:13px;height:13px"><use href="#i-copy"/></svg></button>
+            </li>
+            <li>Copy your Client ID and paste it into the field below, then click Connect.</li>
+          </ol>
+        </div>
+      </details>
+
+      <div style="margin-top:12px">
+        <span class="lbl" style="color:rgba(255,255,255,.7);font-size:12px;margin-bottom:4px;display:block">Custom Spotify Client ID (optional)</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="cfg-client-id" type="text" placeholder="5b670fc5c4ec45e6bf988a07d8ab35c7" autocomplete="off" spellcheck="false" style="flex:1;margin:0" />
+          <button id="btn-copy-link" class="copy-uri-btn" title="Copy link with Client ID" style="flex-shrink:0;padding:8px">
+            <svg class="icon" style="width:15px;height:15px"><use href="#i-link"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="auth-error" style="display:none"></div>
+
+      <div id="auth-step1" class="cta-wrap">
+        <button id="btn-login" class="cta-spotify">
+          <svg viewBox="0 0 24 24" class="cta-ic" aria-hidden="true">
+            <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m4.6 14.42a.62.62 0 0 1-.86.21c-2.35-1.44-5.32-1.76-8.81-.96a.62.62 0 1 1-.28-1.22c3.82-.87 7.1-.5 9.74 1.11.3.18.39.57.21.86m1.23-2.74a.78.78 0 0 1-1.07.26c-2.69-1.66-6.79-2.14-9.97-1.17a.78.78 0 1 1-.45-1.49c3.64-1.11 8.16-.57 11.24 1.33.37.23.49.71.25 1.07m.1-2.86C14.7 8.9 9.4 8.7 6.36 9.62a.94.94 0 1 1-.54-1.8c3.5-1.05 9.36-.83 13.04 1.36a.94.94 0 1 1-.96 1.62"/>
+          </svg>
+          <span>Connect with Spotify</span>
+        </button>
+        <div class="cta-sub muted">Requires Spotify Premium for in-browser playback.</div>
+        <span id="redirect-display" hidden></span>
+      </div>
+
+      <div id="auth-step2" class="cta-wrap" style="display:none">
+        <div class="status-pill"><span class="dot"></span> Redirecting to Spotify…</div>
+      </div>
+
+      <div id="auth-exchanging" class="cta-wrap" style="display:none">
+        <div class="status-pill"><span class="dot"></span> Finishing Spotify login…</div>
+      </div>
+
+      <div style="text-align:center;margin-top:12px">
+        <button id="btn-clear-storage" style="background:#f5a623;color:#000;font-weight:600;font-size:13px">
+          <svg class="icon" style="width:14px;height:14px"><use href="#i-del"/></svg>
+          Clear all saved data
+        </button>
+      </div>
+
+      <div id="auth-connected" style="display:none">
+        <div class="connected-card">
+          <div class="connected-badge">
+            <svg class="icon icon-lg" style="color:#fff"><use href="#i-check"/></svg>
+          </div>
+          <div class="connected-t">Connected to Spotify</div>
+          <div class="cta-wrap" style="margin-top:18px">
+            <button id="btn-continue-auth" class="cta-spotify">
+              <svg class="cta-ic" aria-hidden="true"><use href="#i-forward"/></svg>
+              <span>Continue</span>
+            </button>
+          </div>
+          <button id="btn-disconnect" class="link-btn">
+            <svg class="icon"><use href="#i-disconn"/></svg>
+            Disconnect Spotify
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== PLAYLISTS SCREEN ============== -->
+<section id="screen-playlists" class="screen">
+  <div class="hero-bg fixed-bg" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <header class="pls-topbar">
+    <button class="icon-only" id="btn-back-playlists" title="Back"><svg class="icon"><use href="#i-back"/></svg></button>
+    <div class="pls-topbar-title">
+      <div class="pls-topbar-eyebrow-row">
+        <svg viewBox="0 6 64 40" class="topbar-logo" aria-hidden="true">
+          <path d="M17 32 C17 10 47 10 47 32" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+          <rect x="11" y="30" width="9" height="14" rx="4" fill="white"/>
+          <rect x="44" y="30" width="9" height="14" rx="4" fill="white"/>
+          <line x1="7"  y1="34" x2="7"  y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+          <line x1="4"  y1="31" x2="4"  y2="43" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+          <line x1="1"  y1="28" x2="1"  y2="46" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+          <line x1="57" y1="34" x2="57" y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+          <line x1="60" y1="31" x2="60" y2="43" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+          <line x1="63" y1="28" x2="63" y2="46" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+        </svg>
+        <div class="pls-topbar-eyebrow">SONGSTER</div>
+      </div>
+      <div class="pls-topbar-h">Choose a Playlist</div>
+    </div>
+    <div class="spacer" style="flex:1"></div>
+    <button class="icon-only" id="btn-about" title="About"><svg class="icon icon-lg"><use href="#i-info"/></svg></button>
+  </header>
+
+  <div class="container stack pls-screen">
+
+    <!-- Source picker -->
+    <div class="fancy-card">
+      <div class="card-head">
+        <svg class="icon" style="color:var(--green)"><use href="#i-lib"/></svg>
+        <span>Pick a source</span>
+      </div>
+      <div class="source-grid">
+        <button id="btn-show-spotify-pls" class="source-btn">
+          <div class="source-ic"><svg class="icon"><use href="#i-lib"/></svg></div>
+          <div class="source-t" id="btn-show-spotify-pls-lbl">My playlists</div>
+          <div class="source-s">Browse yours</div>
+        </button>
+        <button id="btn-search-public-pls" class="source-btn">
+          <div class="source-ic"><svg class="icon"><use href="#i-search"/></svg></div>
+          <div class="source-t" id="btn-search-public-pls-lbl">Search public</div>
+          <div class="source-s">Discover playlists</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Selection / edit -->
+    <div class="fancy-card">
+      <div class="card-head">
+        <svg class="icon" style="color:var(--green)"><use href="#i-save"/></svg>
+        <span>Selected playlist</span>
+      </div>
+      <label class="field fancy-field">
+        <span class="lbl">Playlist URL</span>
+        <div class="input-wrap">
+          <svg class="icon input-ic"><use href="#i-link"/></svg>
+          <input id="input-url" type="text" placeholder="https://open.spotify.com/playlist/…" />
+        </div>
+      </label>
+      <label class="field fancy-field">
+        <span class="lbl">Description</span>
+        <div class="input-wrap">
+          <svg class="icon input-ic"><use href="#i-lib"/></svg>
+          <input id="input-desc" type="text" placeholder="e.g. 80s Hits" />
+        </div>
+      </label>
+
+      <div class="row wrap" style="margin-top:6px;gap:8px">
+        <button id="btn-save" class="grow ghost-btn">
+          <svg class="icon"><use href="#i-save"/></svg> Save to History
+        </button>
+        <button id="btn-check" class="grow ghost-btn">
+          <svg class="icon"><use href="#i-check"/></svg> Check
+        </button>
+        <button id="btn-details" class="grow ghost-btn">
+          <svg class="icon"><use href="#i-search"/></svg> Details
+        </button>
+      </div>
+
+      <div id="playlists-msg"></div>
+    </div>
+
+    <!-- History -->
+    <div class="history-section">
+      <div class="history-head">
+        <div class="history-title">Your Playlist History</div>
+        <button id="btn-reset-history" class="history-reset" title="Clear and reload defaults">
+          <svg class="icon"><use href="#i-restart"/></svg> Load SONGSTER default playlists
+        </button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+
+    <details class="backup-details">
+      <summary>Backup / Restore</summary>
+      <div class="row" style="margin-top:8px">
+        <button id="btn-export"><svg class="icon"><use href="#i-download"/></svg> Export JSON</button>
+        <button id="btn-import"><svg class="icon"><use href="#i-upload"/></svg> Import JSON</button>
+        <input id="file-import" type="file" accept="application/json" style="display:none" />
+      </div>
+    </details>
+  </div>
+
+  <!-- Fixed bottom action bar -->
+  <div class="bottom-bar">
+    <div class="bottom-bar-inner">
+      <button id="btn-start" class="cta-spotify start-btn">
+        <svg class="cta-ic"><use href="#i-play"/></svg>
+        <span>Start game</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============== QUIZ SCREEN ============== -->
+<section id="screen-quiz" class="screen">
+  <div class="hero-bg fixed-bg" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <header class="pls-topbar quiz-topbar">
+    <button class="icon-only" id="btn-back-quiz" title="Back"><svg class="icon"><use href="#i-back"/></svg></button>
+    <div class="pls-topbar-title">
+      <div class="pls-topbar-eyebrow-row">
+        <svg viewBox="0 6 64 40" class="topbar-logo" aria-hidden="true">
+          <path d="M17 32 C17 10 47 10 47 32" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+          <rect x="11" y="30" width="9" height="14" rx="4" fill="white"/>
+          <rect x="44" y="30" width="9" height="14" rx="4" fill="white"/>
+          <line x1="7"  y1="34" x2="7"  y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+          <line x1="4"  y1="31" x2="4"  y2="43" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+          <line x1="1"  y1="28" x2="1"  y2="46" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+          <line x1="57" y1="34" x2="57" y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+          <line x1="60" y1="31" x2="60" y2="43" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+          <line x1="63" y1="28" x2="63" y2="46" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+        </svg>
+        <div class="pls-topbar-eyebrow">SONGSTER</div>
+      </div>
+      <div class="pls-topbar-h">Quiz</div>
+    </div>
+    <div class="spacer" style="flex:1"></div>
+    <button class="icon-only" id="btn-fullscreen" title="Fullscreen"><svg class="icon icon-lg"><use href="#i-fullscreen"/></svg></button>
+    <button class="icon-only" id="btn-settings" title="Settings"><svg class="icon icon-lg"><use href="#i-settings"/></svg></button>
+  </header>
+
+  <div class="container stack pls-screen quiz-screen">
+
+    <!-- Now-playing strip -->
+    <div class="np-strip fancy-card" style="padding:4px 16px">
+      <div class="np-disc" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <defs>
+            <linearGradient id="qDisc" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#1db954"/>
+              <stop offset="1" stop-color="#2575fc"/>
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="32" r="28" fill="url(#qDisc)"/>
+          <circle cx="32" cy="32" r="18" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+          <circle cx="32" cy="32" r="6" fill="#15151f"/>
+          <circle cx="32" cy="32" r="2" fill="#fff"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="pls-topbar-eyebrow" style="margin-bottom:2px">NOW PLAYING FROM</div>
+        <div id="quiz-pl-title" class="np-title"></div>
+        <div class="muted" id="quiz-avail-tracks" style="font-size:11px"></div>
+      </div>
+    </div>
+
+    <!-- Reveal card (moved up — it's the focal point) -->
+    <div class="reveal-card" id="reveal-card">
+      <div id="reveal-hidden" class="q">?</div>
+      <div id="reveal-shown" class="details" style="display:none">
+        <div><span class="label">Song:</span> <span class="song" id="d-name"></span></div>
+        <div><span class="label">Artist:</span> <span class="v" id="d-artist"></span></div>
+        <div><span class="label">Album:</span> <span class="v" id="d-album"></span></div>
+        <div><span class="label">Year:</span> <span class="year" id="d-year"></span></div>
+        <div><span class="label">Date:</span> <span class="v" id="d-date"></span></div>
+      </div>
+      <div id="reveal-loading" style="display:none;color:var(--white);font-size:18px;font-weight:600">Loading tracks…</div>
+      <div id="reveal-hint" class="reveal-hint">Click to reveal</div>
+    </div>
+
+    <!-- Playback card: time, progress, seek, transport -->
+    <div class="fancy-card playback-card">
+      <div class="time-row">
+        <span id="time-cur">0:00 / <span id="progress-pct">0%</span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div id="progress-wrap">
+        <div class="progress" id="progress-track">
+          <div id="progress-bar"></div>
+        </div>
+        <div id="progress-window"></div>
+      </div>
+
+      <div class="transport-row">
+        <button class="seek-chip" data-seek="-10" title="-10 seconds">
+          <svg class="icon"><use href="#i-rew"/></svg><span>-10s</span>
+        </button>
+        <button class="seek-chip" data-seek="-5" title="-5 seconds">
+          <svg class="icon" style="transform:scaleX(-1)"><use href="#i-play"/></svg><span>-5s</span>
+        </button>
+        <div class="transport-stack">
+          <button id="btn-restart" class="t-side" title="Restart"><svg class="icon icon-lg"><use href="#i-restart"/></svg></button>
+          <button id="btn-play" class="t-main" title="Play">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button id="btn-pause" class="t-main t-pause" style="display:none" title="Pause">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+          </button>
+        </div>
+        <button class="seek-chip" data-seek="5" title="+5 seconds">
+          <svg class="icon"><use href="#i-play"/></svg><span>+5s</span>
+        </button>
+        <button class="seek-chip" data-seek="10" title="+10 seconds">
+          <svg class="icon"><use href="#i-ff"/></svg><span>+10s</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="quiz-msg"></div>
+
+    <!-- Bottom action row: reveal vs. prev/hide/next -->
+    <div class="row action-row" id="bottom-row-hidden">
+      <button id="btn-show" class="reveal" style="flex:1"><svg class="icon"><use href="#i-search"/></svg> Show Song Details</button>
+    </div>
+    <div class="row action-row" id="bottom-row-shown" style="display:none">
+      <button id="btn-prev" class="prevnext"><svg class="icon"><use href="#i-prev"/></svg> Prev</button>
+      <button id="btn-hide" class="hide-btn"><svg class="icon"><use href="#i-block"/></svg> Hide</button>
+      <button id="btn-next" class="prevnext"><svg class="icon"><use href="#i-next"/></svg> Next</button>
+    </div>
+
+    <!-- Inline game-mode toggle + team strip (game mode) -->
+    <div class="game-mode-row">
+      <span class="game-mode-lbl">Game mode</span>
+      <div class="switch" id="set-game-inline"></div>
+    </div>
+    <div id="team-strip" class="team-strip" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ============== MODAL: About / how it works ============== -->
+<div class="modal-bg" id="modal-about">
+  <div class="modal">
+    <div class="modal-head">
+      <svg viewBox="0 6 64 40" class="topbar-logo about-logo" aria-hidden="true">
+        <path d="M17 32 C17 10 47 10 47 32" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+        <rect x="11" y="30" width="9" height="14" rx="4" fill="white"/>
+        <rect x="44" y="30" width="9" height="14" rx="4" fill="white"/>
+        <line x1="7"  y1="34" x2="7"  y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+        <line x1="4"  y1="31" x2="4"  y2="43" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+        <line x1="1"  y1="28" x2="1"  y2="46" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+        <line x1="57" y1="34" x2="57" y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+        <line x1="60" y1="31" x2="60" y2="43" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+        <line x1="63" y1="28" x2="63" y2="46" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+      </svg>
+      <h3>About Songster</h3>
+    </div>
+    <div class="modal-body">
+      <div id="about-user" class="about-user" style="display:none">
+        <svg class="icon" style="color:var(--green)"><use href="#i-check"/></svg>
+        <div>
+          <div id="about-user-name" style="font-weight:600"></div>
+          <div id="about-user-email" class="muted" style="font-size:12px"></div>
+        </div>
+      </div>
+      <div class="features about-features" data-features-host></div>
+    </div>
+    <div class="modal-foot">
+      <button id="about-close" class="primary">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Stake ============== -->
+<div class="modal-bg" id="modal-stake">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head">
+      <h3 id="stake-title">Place stake</h3>
+      <div class="muted" id="stake-coins" style="margin-top:4px;font-size:12px"></div>
+    </div>
+    <div class="modal-body">
+      <div class="field-block" id="stake-precision-block">
+        <div class="field-lbl">Precision</div>
+        <div class="seg seg-span" id="stake-span">
+          <button data-span="1"><b>1y</b><span>8×</span></button>
+          <button data-span="2"><b>2y</b><span>5×</span></button>
+          <button data-span="5"><b>5y</b><span>3×</span></button>
+          <button data-span="10"><b>10y</b><span>2×</span></button>
+        </div>
+      </div>
+
+      <div class="field-block" id="stake-info-block" style="display:none">
+        <div class="field-lbl">Your turn</div>
+        <div class="stake-info">Call out your answer for everyone to hear &mdash; artist, title, year, or whatever your group plays for. After the reveal, the host marks each team's answer correct or wrong.</div>
+      </div>
+
+      <div class="field-block" id="stake-range-block">
+        <div class="field-lbl">Year range</div>
+        <div class="dual-range" id="stake-range">
+          <div class="dual-range-track"><div class="dual-range-fill" id="stake-range-fill"></div></div>
+          <input id="stake-range-lo" type="range" min="1900" />
+          <input id="stake-range-hi" type="range" min="1900" />
+        </div>
+        <div class="stake-range-readout">
+          <span class="stake-year">
+            <button class="num-step num-step-sm" data-stake-step="lo,-1" type="button">−</button>
+            <b id="stake-range-lo-lbl"></b>
+            <button class="num-step num-step-sm" data-stake-step="lo,1" type="button">+</button>
+          </span>
+          <span class="stake-dash">–</span>
+          <span class="stake-year">
+            <button class="num-step num-step-sm" data-stake-step="hi,-1" type="button">−</button>
+            <b id="stake-range-hi-lbl"></b>
+            <button class="num-step num-step-sm" data-stake-step="hi,1" type="button">+</button>
+          </span>
+        </div>
+      </div>
+
+      <div class="field-block">
+        <div class="field-lbl">Coins to stake</div>
+        <div class="num-input">
+          <button class="num-step" data-step="-1" type="button">−</button>
+          <input id="stake-coins-input" type="number" inputmode="numeric" min="1" />
+          <button class="num-step" data-step="1" type="button">+</button>
+        </div>
+      </div>
+
+      <div class="stake-summary" id="stake-summary"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="stake-skip">Skip</button>
+      <button id="stake-cancel">Cancel</button>
+      <button id="stake-place" class="primary">Place stake</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Team history ============== -->
+<div class="modal-bg" id="modal-history">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="history-title">Team history</h3>
+      <div class="muted" id="history-coins" style="margin-top:4px"></div>
+    </div>
+    <div class="modal-body">
+      <div id="history-content"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="history-add">+ Manual entry</button>
+      <button id="history-close" class="primary">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Edit history entry ============== -->
+<div class="modal-bg" id="modal-history-edit" style="z-index: 110">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <h3>Edit entry</h3>
+    </div>
+    <div class="modal-body">
+      <div class="field-block">
+        <div class="field-lbl">Coin change (use negative for a loss)</div>
+        <input id="edit-delta" type="number" inputmode="numeric" />
+      </div>
+      <div class="field-block">
+        <div class="field-lbl">Note (optional)</div>
+        <input id="edit-note" type="text" placeholder="e.g. metadata was wrong" />
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="edit-cancel">Cancel</button>
+      <button id="edit-save" class="primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Auth error ============== -->
+<div class="modal-bg" id="modal-auth-error" style="z-index: 200">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head">
+      <h3 style="color:#ff8a8a">⚠ Not authorized</h3>
+    </div>
+    <div class="modal-body" id="modal-auth-error-body"></div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Confirm ============== -->
+<div class="modal-bg" id="modal-confirm" style="z-index: 200">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-body">
+      <h3 id="confirm-title">Are you sure?</h3>
+      <p id="confirm-msg" class="muted" style="margin:8px 0 0"></p>
+    </div>
+    <div class="modal-foot">
+      <button id="confirm-cancel">Cancel</button>
+      <button id="confirm-ok" class="primary">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Spotify Playlists ============== -->
+<div class="modal-bg" id="modal-spotify-pls">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>My Spotify Playlists</h3>
+      <div class="muted" id="modal-pls-total" style="margin:4px 0 8px"></div>
+      <input id="modal-pls-search" type="text" placeholder="Search playlists…" />
+    </div>
+    <div class="modal-body">
+      <div id="modal-pls-content"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="modal-pls-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Search public playlists ============== -->
+<div class="modal-bg" id="modal-search-public">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Search public playlists</h3>
+      <input id="search-public-q" type="text" placeholder="Type to search…" autocomplete="off" />
+      <div class="muted" id="search-public-meta" style="margin-top:6px;font-size:12px"></div>
+    </div>
+    <div class="modal-body">
+      <div id="search-public-content"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="search-public-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Playlist details (songs) ============== -->
+<div class="modal-bg" id="modal-pl-details" style="z-index: 110">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="details-pl-name">Playlist</h3>
+      <div class="muted" id="details-pl-meta" style="margin-top:4px;font-size:12px"></div>
+    </div>
+    <div class="modal-body">
+      <div id="details-pl-content"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="details-pl-use" class="primary" style="margin-right:auto">Use this playlist</button>
+      <button id="details-pl-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: Settings ============== -->
+<div class="modal-bg" id="modal-settings">
+  <div class="modal">
+    <div class="modal-body">
+      <h3>Quiz Settings</h3>
+
+      <div style="margin-top:12px">
+        <div style="font-size:16px">Song year range</div>
+        <div class="muted" id="set-avail-tracks"></div>
+        <div class="dual-range" id="year-range">
+          <div class="dual-range-track"><div class="dual-range-fill" id="year-range-fill"></div></div>
+          <input id="set-year-min" type="range" min="1900" />
+          <input id="set-year-max" type="range" min="1900" />
+        </div>
+        <div class="range-labels">
+          <span>From: <b id="set-year-min-lbl"></b></span>
+          <span>Until: <b id="set-year-max-lbl"></b></span>
+        </div>
+      </div>
+
+      <hr/>
+      <div>
+        <div style="font-size:16px">Play time: <b id="set-pt-lbl"></b> seconds</div>
+        <input id="set-pt" type="range" min="5" max="120" />
+        <div class="muted">How long should each song play?</div>
+      </div>
+
+      <hr/>
+      <div>
+        <div style="font-size:16px">Start time: <b id="set-st-lbl"></b>%</div>
+        <input id="set-st" type="range" min="0" max="99" />
+        <div class="muted">Where in the song to start (0–99%)</div>
+      </div>
+
+      <hr/>
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-size:16px">Random start time</div>
+          <div class="muted">Start at random position in song</div>
+        </div>
+        <div class="switch" id="set-rand"></div>
+      </div>
+
+      <hr/>
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-size:16px">Autoplay</div>
+          <div class="muted">Automatically play new songs</div>
+        </div>
+        <div class="switch" id="set-auto"></div>
+      </div>
+
+      <hr/>
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-size:16px">Game mode</div>
+          <div class="muted">Stake coins, win or lose with each guess</div>
+        </div>
+        <div class="switch" id="set-game"></div>
+      </div>
+
+      <div id="game-opts" style="display:none">
+        <div style="margin-top:10px">
+          <div style="font-size:16px">Number of teams</div>
+          <div class="seg" id="set-teams">
+            <button data-n="2">2</button>
+            <button data-n="3">3</button>
+            <button data-n="4">4</button>
+          </div>
+        </div>
+        <div class="row" style="justify-content:space-between;margin-top:12px">
+          <div>
+            <div style="font-size:16px">Guess the year</div>
+            <div class="muted">On: guess the year and answers are auto-marked from Spotify's release date</div>
+            <div class="muted">Off: teams say the artist/title and you mark answers manually</div>
+          </div>
+          <div class="switch" id="set-guess-year"></div>
+        </div>
+        <div class="row" style="margin-top:10px;gap:8px">
+          <button id="set-reset-game" style="background:rgba(255,107,107,.18);border-color:rgba(255,107,107,.3)">
+            Reset all team scores
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="set-close" class="primary">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="src/util.js"></script>
+<script src="src/auth.js"></script>
+<script src="src/spotify.js"></script>
+<script src="src/playlists.js"></script>
+<script src="src/quiz.js"></script>
+<script src="src/game.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
