@@ -130,3 +130,23 @@ test('filterByYear keeps only tracks within the configured range', async ({ page
   });
   expect(out.map(t => t.year)).toEqual([2000, 2005]);
 });
+// ── openSettings / closeSettings ────────────────────────────────────────────
+
+test('openSettings populates the modal from current settings', async ({ page }) => {
+  await page.evaluate(() => {
+    settings.yearMin = 1970; settings.yearMax = 1990;
+    settings.playTimeLimitSeconds = 25; settings.startTimePercent = 10;
+    settings.randomStartTime = true; settings.autoplay = false;
+    openSettings();
+  });
+  await expect(page.locator('#set-year-min-lbl')).toHaveText('1970');
+  await expect(page.locator('#set-year-max-lbl')).toHaveText('1990');
+  await expect(page.locator('#set-pt-lbl')).toHaveText('25');
+  await expect(page.locator('#set-st-lbl')).toHaveText('10');
+  await expect(page.locator('#set-st')).toBeDisabled();
+});
+
+test('closeSettings removes the active class', async ({ page }) => {
+  await page.evaluate(() => { openSettings(); closeSettings(); });
+  await expect(page.locator('#modal-settings')).not.toHaveClass(/active/);
+});

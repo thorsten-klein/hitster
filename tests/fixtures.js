@@ -45,9 +45,30 @@ export const expect = base.expect;
 
 // Songster makes real network calls to Spotify on boot when the user is
 // "authenticated". Mock those out so tests can run offline and deterministically.
+//
+// Per-test overrides can be installed via window.__spotifyHandlers (set up by
+// installSpotifyHandlers below) — each handler receives the raw URL and may
+// return { status?, body? } to override the default response.
 export async function installSpotifyMocks(page) {
   await page.route('**/api.spotify.com/**', async route => {
     const url = route.request().url();
+    // Allow tests to inject custom responses via a page-side handler registry.
+    const override = await page.evaluate(u => {
+      if (!window.__spotifyHandlers) return null;
+      for (const h of window.__spotifyHandlers) {
+        const m = h(u);
+        if (m) return m;
+      }
+      return null;
+    }, url).catch(() => null);
+    if (override) {
+      await route.fulfill({
+        status: override.status || 200,
+        contentType: 'application/json',
+        body: JSON.stringify(override.body ?? {}),
+      });
+      return;
+    }
     let body = {};
     if (url.includes('/me/playlists')) {
       body = { items: [], total: 0, next: null };
@@ -59,6 +80,8 @@ export async function installSpotifyMocks(page) {
       body = { name: 'Mock Playlist', tracks: { total: 10 } };
     } else if (url.includes('/search')) {
       body = { playlists: { items: [], total: 0, next: null } };
+    } else if (url.includes('/me/player')) {
+      body = {};
     } else if (url.includes('/me')) {
       body = { id: 'mockuser', display_name: 'Mock User' };
     }
@@ -83,6 +106,43 @@ export async function installSpotifyMocks(page) {
   });
   // Block the Web Playback SDK script — we never exercise real playback in tests.
   await page.route('**/sdk.scdn.co/**', route => route.fulfill({ status: 200, body: '' }));
+}
+
+// Install a fake Spotify Web Playback SDK so ensurePlayer() resolves without
+// actually loading the remote SDK. Player methods are stubs that record calls
+// on window.__playerCalls.
+export async function installFakeSdk(page) {
+  await page.evaluate(() => {
+    window.__playerCalls = [];
+    const listeners = {};
+    let _state = {
+      position: 0,
+      duration: 180_000,
+      paused: false,
+      track_window: { current_track: { uri: 'spotify:track:t1' } },
+    };
+    window.__setPlayerState = (patch) => { Object.assign(_state, patch); };
+    class FakePlayer {
+      constructor(opts) {
+        this.opts = opts;
+        // Allow the test to inspect the token callback.
+        opts.getOAuthToken(t => { window.__lastToken = t; });
+      }
+      addListener(ev, cb) { (listeners[ev] = listeners[ev] || []).push(cb); }
+      connect() {
+        setTimeout(() => (listeners['ready'] || []).forEach(cb => cb({ device_id: 'fake-device' })), 0);
+        return Promise.resolve(true);
+      }
+      disconnect() { window.__playerCalls.push(['disconnect']); }
+      pause() { window.__playerCalls.push(['pause']); return Promise.resolve(); }
+      resume() { window.__playerCalls.push(['resume']); return Promise.resolve(); }
+      seek(ms) { window.__playerCalls.push(['seek', ms]); return Promise.resolve(); }
+      getCurrentState() { return Promise.resolve(_state); }
+    }
+    window.__fakePlayerListeners = listeners;
+    window.Spotify = { Player: FakePlayer };
+    // Pretend the SDK script is already loaded so loadSdk() resolves instantly.
+  });
 }
 
 // Open the app fresh, clearing localStorage so each test starts identically.
