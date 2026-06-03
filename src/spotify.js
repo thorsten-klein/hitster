@@ -45,6 +45,7 @@ async function fetchPlaylistTracks(playlistId) {
         releaseDate,
         imageUrl: image,
         uri: t.uri,
+        durationMs: t.duration_ms || 0,
       });
     }
     const total = j.total || 0;
