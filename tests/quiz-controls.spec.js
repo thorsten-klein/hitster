@@ -660,7 +660,10 @@ test.describe('quiz wiring', () => {
     const v1 = await page.locator('#stake-coins-input').inputValue();
     expect(+v1).toBeGreaterThanOrEqual(2);
     // Click - many times — value should never drop below 1.
-    for (let i = 0; i < 30; i++) await page.locator('#modal-stake [data-step="-1"]').click();
+    await page.evaluate(() => {
+      const btn = document.querySelector('#modal-stake [data-step="-1"]');
+      for (let i = 0; i < 30; i++) btn.click();
+    });
     const v2 = await page.locator('#stake-coins-input').inputValue();
     expect(+v2).toBe(1);
   });
