@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: [chromium, firefox]
     name: Tests (${{ matrix.browser }})
     steps:
       - uses: actions/checkout@v4

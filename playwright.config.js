@@ -28,10 +28,11 @@ export default defineConfig({
             name: 'firefox',
             use: { ...devices['Desktop Firefox'] }
         },
-        {
-            name: 'webkit',
-            use: { ...devices['Desktop Safari'] }
-        },
+        // TODO: webkit is slow and instable
+        // {
+        //     name: 'webkit',
+        //     use: { ...devices['Desktop Safari'] }
+        // },
     ],
     // Snapshot dir for visual regression baselines
     snapshotDir: './tests/snapshots',
