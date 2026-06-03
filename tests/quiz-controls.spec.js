@@ -205,6 +205,58 @@ test('playCurrent with needsHardResume re-issues the track via REST', async ({ p
   expect(played).toBe(true);
 });
 
+test('playCurrent computes startTimePercent against the playlist-API duration before the SDK reports', async ({ page }) => {
+  // Before the SDK reports a duration, the only thing we know about the
+  // track's length is whatever Spotify gave us at playlist-load time. If we
+  // ignore that and fall back to the 2-minute estimate, startTimePercent
+  // lands well before the user's intended mark.
+  let lastBody = '';
+  await page.route('**/api.spotify.com/**/me/player/play**', route => {
+    lastBody = route.request().postData() || '';
+    route.fulfill({ status: 204, body: '' });
+  });
+  await page.evaluate(async () => {
+    settings.randomStartTime = false;
+    settings.startTimePercent = 50;
+    settings.playTimeLimitSeconds = 30;
+    quiz.trackDurationMs = 0; // SDK hasn't reported yet
+    quiz.currentTrack = { ...quiz.currentTrack, durationMs: 240_000 };
+    await playCurrent();
+  });
+  // 50% of (240s - 30s) = 105_000ms. Pre-fix this was 45_000 (50% of 90s).
+  expect(lastBody).toMatch(/"position_ms":105000/);
+});
+
+test('playCurrent explicitly seeks to the start position after play (defense against Spotify ignoring position_ms)', async ({ page }) => {
+  // Reproduces the symptom: Spotify occasionally honours the PUT /play call
+  // but resumes from the previous track's pause position instead of the
+  // requested position_ms. We follow up with an explicit seek so the song
+  // always starts at the configured start time regardless.
+  await page.route('**/api.spotify.com/**/me/player/play**', route =>
+    route.fulfill({ status: 204, body: '' }));
+  await page.evaluate(async () => {
+    await ensurePlayer();
+    settings.randomStartTime = false;
+    settings.startTimePercent = 50;
+    settings.playTimeLimitSeconds = 30;
+    quiz.trackDurationMs = 0;
+    quiz.currentTrack = { ...quiz.currentTrack, durationMs: 240_000 };
+    window.__playerCalls = [];
+    await playCurrent();
+  });
+  // 50% of (240s - 30s) = 105_000ms.
+  const calls = await page.evaluate(() => window.__playerCalls);
+  expect(calls).toEqual(expect.arrayContaining([['seek', 105_000]]));
+});
+
+test('selectCurrentTrack clears needsHardResume so it cannot leak to the next track', async ({ page }) => {
+  await page.evaluate(() => {
+    quiz.needsHardResume = true;
+    selectCurrentTrack();
+  });
+  expect(await page.evaluate(() => quiz.needsHardResume)).toBe(false);
+});
+
 test('playCurrent honours randomStartTime when computing position', async ({ page }) => {
   await page.evaluate(async () => {
     settings.randomStartTime = true;

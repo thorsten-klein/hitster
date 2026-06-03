@@ -98,6 +98,11 @@ function selectCurrentTrack() {
   quiz.playbackEndPositionMs = 0;
   quiz.isPlayEndless = false;
   quiz.trackDurationMs = 0;
+  quiz.isStarting = false;
+  // needsHardResume is set when the user clicks "Open in Spotify"; it's only
+  // meaningful for the track that was paused at that moment, so clear it
+  // whenever we switch tracks to keep it from forcing a stale resume.
+  quiz.needsHardResume = false;
   quiz.hidden = true;
   quiz.payoutDone = false;
   // New song = fresh round; clear any leftover stakes and the previous round's results.
@@ -107,6 +112,14 @@ function selectCurrentTrack() {
   if (typeof renderTeamStrip === 'function') renderTeamStrip();
   renderQuiz();
   if (settings.autoplay) playCurrent();
+}
+
+// SDK-reported duration is authoritative once playback starts; before that we
+// fall back to the duration captured from the playlist API. Either of those is
+// the real song length — only callers needing a display fallback should
+// substitute a hard-coded estimate.
+function knownDurationMs() {
+  return quiz.trackDurationMs || quiz.currentTrack?.durationMs || 0;
 }
 
 function clearTimers() {
@@ -174,10 +187,14 @@ async function playCurrent() {
   }
   const gen = ++playGen;
   clearTimers();
+  quiz.isStarting = true;
   let startPositionMs;
   const playMs = settings.playTimeLimitSeconds * 1000;
-  // Use known duration if available, otherwise assume 2 minutes.
-  const durationMs = quiz.trackDurationMs > playMs ? quiz.trackDurationMs : 120_000;
+  // Estimate 2 minutes only when even the playlist-API duration is unknown —
+  // otherwise the first play of each track would compute startTimePercent
+  // against a fictional 2-minute length and start well before the user's mark.
+  const known = knownDurationMs();
+  const durationMs = known > playMs ? known : 120_000;
   const maxStart = Math.max(0, durationMs - playMs);
   if (settings.randomStartTime) {
     startPositionMs = Math.floor(Math.random() * maxStart);
@@ -195,10 +212,17 @@ async function playCurrent() {
       playerPause().catch(() => {});
       return;
     }
+    // Spotify's play endpoint takes position_ms, but when the SDK was paused
+    // on a different track it occasionally ignores it and resumes from the
+    // previous track's pause position. Force the position with an explicit
+    // seek so the song always starts at the user's configured start time.
+    await playerSeek(startPositionMs);
+    if (gen !== playGen) { playerPause().catch(() => {}); return; }
     quiz.currentTrackStartPositionMs = startPositionMs;
     updateProgressUi();
     afterPlayStarted(t, startPositionMs);
   } catch (e) {
+    quiz.isStarting = false;
     quiz.errorMessage = e.message;
     renderQuiz();
   }
@@ -206,6 +230,7 @@ async function playCurrent() {
 
 async function applyPause(byTimer = false) {
   quiz.isPlaying = false; // set synchronously so player_state_changed ignores the position reset
+  quiz.isStarting = false;
   clearTimers();
   await playerPause();
   quiz.isPaused = true;
@@ -222,6 +247,7 @@ async function autoPause() {
 
 // Shared post-play-command success path for playCurrent and restartCurrent.
 function afterPlayStarted(t, pos) {
+  quiz.isStarting = false;
   quiz.isPlayEndless = false;
   quiz.isPlaying = true;
   quiz.isPaused = false;
@@ -236,12 +262,15 @@ async function restartCurrent() {
   const t = quiz.currentTrack; if (!t) return;
   const gen = ++playGen;
   clearTimers();
+  quiz.isStarting = true;
   const pos = quiz.currentTrackStartPositionMs;
   try {
     await playerPlayTrack(t.uri, pos);
     if (gen !== playGen) { playerPause().catch(() => {}); return; }
+    await playerSeek(pos); // enforce — see playCurrent comment
+    if (gen !== playGen) { playerPause().catch(() => {}); return; }
     afterPlayStarted(t, pos);
-  } catch (e) { quiz.errorMessage = e.message; renderQuiz(); }
+  } catch (e) { quiz.isStarting = false; quiz.errorMessage = e.message; renderQuiz(); }
 }
 
 function stepSong(delta) {
@@ -338,18 +367,31 @@ function updateProgressUi() {
   const ratio = active ? Math.max(0, Math.min(1, quiz.currentPlaybackPositionMs / dur)) : 0;
 
   $('#progress-bar').style.width = (ratio * 100).toFixed(1) + '%';
-  $('#progress-pct').textContent = active ? Math.round(ratio * 100) + '%' : '';
+  // Always populate the time-row so its height stays constant — an empty row
+  // collapses and makes the progress bar visibly jump. During playlist fetch
+  // or the autoplay start-request gap show "Loading ..."; otherwise a "0:00 /
+  // 0%" placeholder when nothing is playing.
+  const loading = quiz.isLoading || quiz.isStarting;
+  $('#progress-pct').textContent = loading ? '' : (active ? Math.round(ratio * 100) + '%' : '0%');
   const tc = $('#time-cur');
-  if (tc) tc.firstChild.textContent = active ? fmtTime(quiz.currentPlaybackPositionMs) + ' / ' : '';
+  if (tc) {
+    tc.firstChild.textContent = loading
+      ? 'Loading ... '
+      : (active ? fmtTime(quiz.currentPlaybackPositionMs) + ' / ' : '0:00 / ');
+  }
 
   const win = $('#progress-window');
   if (win) {
     const endPos = quiz.playbackEndPositionMs;
-    if (active && endPos > 0) {
-      const left = Math.min(1, quiz.currentTrackStartPositionMs / dur);
-      const right = Math.min(1, endPos / dur);
-      win.style.left = (left * 100).toFixed(1) + '%';
-      win.style.width = ((right - left) * 100).toFixed(1) + '%';
+    // Position the window against the real duration only; the 180s display
+    // fallback above would make it jump once the SDK reports the real value.
+    const trueDur = knownDurationMs();
+    if (active && endPos > 0 && trueDur > 0) {
+      const left = Math.min(1, quiz.currentTrackStartPositionMs / trueDur);
+      const right = Math.min(1, endPos / trueDur);
+      // Shift left by 2px and widen by 4px so the bar visually runs inside
+      win.style.left = `calc(${(left * 100).toFixed(1)}% - 2px)`;
+      win.style.width = `calc(${((right - left) * 100).toFixed(1)}% + 4px)`;
       win.style.display = 'block';
     } else {
       win.style.display = 'none';
