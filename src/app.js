@@ -140,6 +140,8 @@ function wirePlaylists() {
       syncStartButton();
     }
 
+    markPlaylistPlayed(url);
+
     quiz.playlistUrl = url;
     quiz.playlistTitle = desc;
     quiz.allTracks = []; quiz.filteredTracks = []; quiz.currentTrackIndex = 0;
@@ -210,6 +212,22 @@ function wirePlaylists() {
     a.download = 'songster-playlists.json';
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  $('#history-search').addEventListener('input', e => {
+    historyQuery = e.target.value;
+    renderHistory();
+  });
+  document.querySelectorAll('.history-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const col = btn.dataset.sort;
+      if (historySort.col === col) {
+        historySort.dir = -historySort.dir;
+      } else {
+        historySort.col = col;
+        historySort.dir = col === 'date' ? -1 : 1;
+      }
+      renderHistory();
+    });
   });
   $('#btn-reset-history').addEventListener('click', async () => {
     const ok = await confirmModal({
@@ -315,6 +333,16 @@ function wireQuiz() {
     if (!quiz.hidden) onReveal();
     renderQuiz();
   });
+  // Opening Spotify elsewhere takes playback off our Web Playback SDK device,
+  // so spPlayer.resume() would no-op afterwards. Flag the next play to do a
+  // hard "play at current position" via REST instead.
+  const onSpotifyLinkClick = e => {
+    e.stopPropagation();
+    quiz.needsHardResume = true;
+    if (quiz.isPlaying) pauseCurrent();
+  };
+  $('#btn-open-spotify').addEventListener('click', onSpotifyLinkClick);
+  $('#btn-search-spotify').addEventListener('click', onSpotifyLinkClick);
   $$('[data-seek]').forEach(el => {
     el.addEventListener('click', () => seekDelta(+el.dataset.seek));
   });
@@ -461,6 +489,23 @@ function wireQuiz() {
     ensureTeams(settings.numTeams);
     syncTeamSeg();
     renderTeamStrip();
+  });
+  $('#set-reset-defaults').addEventListener('click', async () => {
+    const ok = await confirmModal({
+      title: 'Reset settings to defaults?',
+      message: 'All quiz settings will be reset to their defaults. Team scores are not affected.',
+      okLabel: 'Reset',
+      cancelLabel: 'Cancel',
+    });
+    if (!ok) return;
+    Object.assign(settings, defaultSettings);
+    persistSettings();
+    quiz.filteredTracks = filterByYear(quiz.allTracks);
+    quiz.currentTrackIndex = 0;
+    selectCurrentTrack();
+    openSettings();
+    renderTeamStrip();
+    if (typeof renderQuiz === 'function') renderQuiz();
   });
   $('#set-reset-game').addEventListener('click', async () => {
     const ok = await confirmModal({

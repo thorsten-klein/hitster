@@ -20,6 +20,7 @@ const SCOPES = [
   'user-read-currently-playing',
 ].join(' ');
 
+
 const LS_KEY_AUTH = 'songster.auth';
 const LS_KEY_PLAYLISTS = 'songster.playlists';
 const LS_KEY_SETTINGS = 'songster.settings';

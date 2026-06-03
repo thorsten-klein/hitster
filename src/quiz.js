@@ -151,7 +151,21 @@ async function playCurrent() {
   if (quiz.isPaused) {
     if (quiz.pausedByTimer) quiz.isPlayEndless = true;
     quiz.pausedByTimer = false;
-    await playerResume();
+    // After "Open in Spotify" the SDK device may have lost its track ("no list
+    // was loaded"). Re-arm playback by re-issuing the track via REST.
+    if (quiz.needsHardResume) {
+      quiz.needsHardResume = false;
+      const gen = ++playGen;
+      const pos = quiz.currentPlaybackPositionMs;
+      try {
+        await playerPlayTrack(t.uri, pos);
+        if (gen !== playGen) { playerPause().catch(() => {}); return; }
+      } catch (e) {
+        quiz.errorMessage = e.message; renderQuiz(); return;
+      }
+    } else {
+      await playerResume();
+    }
     quiz.isPlaying = true;
     quiz.isPaused = false;
     renderPlayButtons();
@@ -286,6 +300,8 @@ function renderQuiz() {
     $('#d-album').textContent = quiz.currentTrack.album;
     $('#d-year').textContent = quiz.currentTrack.year || '—';
     $('#d-date').textContent = quiz.currentTrack.releaseDate || '—';
+    $('#btn-open-spotify').href = `https://open.spotify.com/track/${quiz.currentTrack.id}`;
+    $('#btn-search-spotify').href = `https://open.spotify.com/search/${encodeURIComponent(quiz.currentTrack.artist + ' ' + quiz.currentTrack.name)}/tracks`;
   }
 
   // Bottom row

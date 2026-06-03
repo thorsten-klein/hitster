@@ -22,6 +22,10 @@ async function seedDefaultsIfFirstRun() {
   if (localStorage.getItem(LS_KEY_PLAYLISTS) !== null) return;
   try {
     const lists = await fetchUserPublicPlaylists(DEFAULT_PLAYLISTS_USER_ID);
+    // Stamp each seed with a slightly increasing addedAt so default "by date desc"
+    // preserves the order returned by Spotify (first in list = newest).
+    const now = Date.now();
+    lists.forEach((p, i) => { p.addedAt = now - i; });
     localStorage.setItem(LS_KEY_PLAYLISTS, JSON.stringify(lists));
     renderHistory();
     if (lists.length) toast(`Loaded ${lists.length} default playlists`);
@@ -77,11 +81,58 @@ function selectPlaylistFromModal(p, closeModalId) {
   if (closeModalId) document.getElementById(closeModalId).classList.remove('active');
 }
 
+// In-memory sort preference for the history list.
+// col: 'name' | 'date' ; dir: 1=asc, -1=desc.
+// Default: by date (lastPlayedAt || addedAt), most recent first.
+let historySort = { col: 'date', dir: -1 };
+let historyQuery = '';
+
+function historyDateValue(p) {
+  return p.lastPlayedAt || p.addedAt || 0;
+}
+
+function sortedHistory() {
+  let list = loadPlaylists().slice();
+  const q = historyQuery.trim().toLowerCase();
+  if (q) {
+    list = list.filter(p =>
+      (p.description || '').toLowerCase().includes(q) ||
+      (p.playlistUrl || '').toLowerCase().includes(q)
+    );
+  }
+  if (historySort.col === 'name') {
+    list.sort((a, b) => a.description.localeCompare(b.description) * historySort.dir);
+  } else {
+    list.sort((a, b) => (historyDateValue(a) - historyDateValue(b)) * historySort.dir);
+  }
+  return list;
+}
+
+function renderHistorySortBar() {
+  const arrow = (col) => {
+    if (historySort.col !== col) return '⇅';
+    return historySort.dir === 1 ? '▲' : '▼';
+  };
+  document.querySelectorAll('.history-sort-btn').forEach(btn => {
+    const col = btn.dataset.sort;
+    btn.classList.toggle('active', historySort.col === col);
+    const ind = btn.querySelector('.sort-ind');
+    if (ind) {
+      ind.textContent = arrow(col);
+      ind.classList.toggle('active', historySort.col === col);
+    }
+  });
+}
+
 function renderHistory() {
-  const list = loadPlaylists().slice().sort((a,b) => a.description.localeCompare(b.description));
+  const list = sortedHistory();
+  renderHistorySortBar();
   const root = $('#history-list');
   if (!list.length) {
-    root.innerHTML = `<div class="muted">No playlists added yet!</div>`;
+    const msg = historyQuery.trim()
+      ? `No playlists match "${escHtml(historyQuery.trim())}".`
+      : 'No playlists added yet!';
+    root.innerHTML = `<div class="muted">${msg}</div>`;
     return;
   }
   root.innerHTML = list.map((p, idx) => `
@@ -155,6 +206,14 @@ function setPlaylistsMsg(msg, kind='err') {
   el.innerHTML = `<div class="${kind}">${escHtml(msg)}</div>`;
 }
 
+function markPlaylistPlayed(playlistUrl) {
+  const arr = loadPlaylists();
+  const entry = arr.find(p => p.playlistUrl === playlistUrl);
+  if (!entry) return;
+  entry.lastPlayedAt = Date.now();
+  savePlaylists(arr);
+}
+
 function savePlaylist({ playlistUrl, description }) {
   if (!playlistUrl.trim() || !description.trim()) {
     setPlaylistsMsg('Playlist URL and description must be set');
@@ -172,7 +231,7 @@ function savePlaylist({ playlistUrl, description }) {
   } else if (existingByDesc) {
     existingByDesc.playlistUrl = playlistUrl;
   } else {
-    arr.push({ playlistUrl, description });
+    arr.push({ playlistUrl, description, addedAt: Date.now() });
   }
   savePlaylists(arr);
   setPlaylistsMsg(null);

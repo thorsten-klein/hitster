@@ -103,7 +103,7 @@
     position: relative;
   }
   .reveal-card .q { font-size: 100px; opacity: .9; }
-  .reveal-card .details { padding: 18px 22px; align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 4px; width: 100%; }
+  .reveal-card .details { position: relative; padding: 18px 22px; align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 4px; width: 100%; }
   /* Each row: label pinned left, value centered within the row. The 3rd column
      mirrors the label's width so the value sits visually centered in the card. */
   .reveal-card .details > div {
@@ -122,6 +122,25 @@
   .reveal-card .details .v { font-size: 16px; }
   .reveal-card .details .song { font-size: 18px; font-weight: 700; }
   .reveal-card .details .year { font-size: 22px; font-weight: 700; color: #fff; }
+  .reveal-card .details > .reveal-acts {
+    position: absolute;
+    top: 8px; right: 8px;
+    display: flex;
+    gap: 6px;
+    z-index: 3;
+  }
+  .reveal-card .reveal-act {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1db954; color: #fff;
+    border: 0; border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px; font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .reveal-card .reveal-act:hover { background: #1ed760; }
+  .reveal-card .reveal-act .icon { width: 16px; height: 16px; }
 
   /* Progress bar */
   .progress {
@@ -292,6 +311,40 @@
     background: rgba(255,255,255,.12); font-size: 12px; padding: 6px 10px;
   }
   .history-reset:hover:not(:disabled) { background: rgba(255,255,255,.22); }
+  .history-sort {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,.10);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .history-sort-lbl {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--white80); font-weight: 600;
+  }
+  .history-sort-btn {
+    background: rgba(255,255,255,.08); font-size: 12px; padding: 5px 10px;
+    border: 1px solid rgba(255,255,255,.10);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .history-sort-btn:hover:not(:disabled) { background: rgba(255,255,255,.16); }
+  .history-sort-btn.active {
+    background: rgba(29,185,84,.22);
+    border-color: rgba(29,185,84,.45);
+    color: #c8f5d9;
+  }
+  .history-sort-btn .sort-ind { font-size: 10px; color: rgba(255,255,255,.45); }
+  .history-sort-btn.active .sort-ind { color: var(--green); }
+  input.history-search[type="text"] {
+    flex: 1 1 140px; min-width: 120px;
+    width: auto;
+    padding: 5px 10px; font-size: 12px;
+    background: rgba(0,0,0,.25);
+    color: var(--white);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 6px;
+  }
+  input.history-search[type="text"]::placeholder { color: rgba(255,255,255,.45); }
+  input.history-search[type="text"]:focus { outline: none; border-color: rgba(29,185,84,.55); background: rgba(0,0,0,.32); }
   #history-list { padding: 4px 6px; }
   #history-list .muted { padding: 16px; text-align: center; }
   .history-item {
