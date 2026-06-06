@@ -538,8 +538,7 @@ test.describe('quiz wiring', () => {
       route.fulfill({ status: 204, body: '' });
     });
     await page.locator('#btn-play').click();
-    await page.waitForTimeout(100);
-    expect(played).toBe(true);
+    await expect.poll(() => played, { timeout: 5000 }).toBe(true);
   });
 
   test('Pause button calls pauseCurrent', async ({ page }) => {
@@ -561,8 +560,9 @@ test.describe('quiz wiring', () => {
       played = true; route.fulfill({ status: 204, body: '' });
     });
     await page.locator('#btn-restart').click();
-    await page.waitForTimeout(100);
-    expect(played).toBe(true);
+    // Poll rather than wait-and-check: in firefox CI, ensurePlayer + the
+    // transfer-playback PUT + the play PUT can exceed 100ms.
+    await expect.poll(() => played, { timeout: 5000 }).toBe(true);
   });
 
   test('Seek buttons call seekDelta', async ({ page }) => {

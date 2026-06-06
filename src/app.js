@@ -152,12 +152,16 @@ function wirePlaylists() {
     quiz.hidden = true;
     setScreen('quiz');
     renderQuiz();
-    // Initialize player early (user gesture), then load tracks
-    ensurePlayer().catch(e => {
+    // Initialize player early (user gesture), then load tracks. Both run in
+    // parallel; if the player init fails, surface the error AFTER the playlist
+    // load settles — otherwise selectCurrentTrack's errorMessage reset
+    // overwrites the player error in races where the playlist finishes second.
+    const playlistPromise = loadQuizPlaylist();
+    ensurePlayer().catch(async e => {
+      await playlistPromise.catch(() => {});
       quiz.errorMessage = 'Player init failed: ' + e.message;
       renderQuiz();
     });
-    loadQuizPlaylist();
   });
   $('#btn-show-spotify-pls').addEventListener('click', openSpotifyPlsModal);
   $('#modal-pls-close').addEventListener('click', () => $('#modal-spotify-pls').classList.remove('active'));
