@@ -81,6 +81,8 @@
     <symbol id="i-fullscreen-exit" viewBox="0 0 24 24"><path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></symbol>
     <symbol id="i-trophy" viewBox="0 0 24 24"><path fill="currentColor" d="M19 5h-2V3H7v2H5C3.9 5 3 5.9 3 7v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H9v2h6v-2h-2v-2.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2M5 8V7h2v3.82C5.84 10.4 5 9.3 5 8m14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></symbol>
     <symbol id="i-spotify" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m4.6 14.42a.62.62 0 0 1-.86.21c-2.35-1.44-5.32-1.76-8.81-.96a.62.62 0 1 1-.28-1.22c3.82-.87 7.1-.5 9.74 1.11.3.18.39.57.21.86m1.23-2.74a.78.78 0 0 1-1.07.26c-2.69-1.66-6.79-2.14-9.97-1.17a.78.78 0 1 1-.45-1.49c3.64-1.11 8.16-.57 11.24 1.33.37.23.49.71.25 1.07m.1-2.86C14.7 8.9 9.4 8.7 6.36 9.62a.94.94 0 1 1-.54-1.8c3.5-1.05 9.36-.83 13.04 1.36a.94.94 0 1 1-.96 1.62"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.93 8M12 4.04A14 14 0 0 1 13.91 8h-3.82A14 14 0 0 1 12 4.04M4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38a16.5 16.5 0 0 0 0 4zm.82 2h2.95a15.65 15.65 0 0 0 1.38 3.56A7.99 7.99 0 0 1 5.08 16m2.95-8H5.08a7.99 7.99 0 0 1 4.33-3.56A15.65 15.65 0 0 0 8.03 8M12 19.96A14 14 0 0 1 10.09 16h3.82A14 14 0 0 1 12 19.96M14.34 14H9.66a14.86 14.86 0 0 1 0-4h4.68a14.86 14.86 0 0 1 0 4m.25 5.56A15.65 15.65 0 0 0 15.97 16h2.95a8.03 8.03 0 0 1-4.33 3.56M16.36 14a16.5 16.5 0 0 0 0-4h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m0 16H5V9h14zm0-13H5V6h14z"/></symbol>
   </defs>
 </svg>
 
@@ -393,14 +395,38 @@
       <div id="reveal-hidden" class="q">?</div>
       <div id="reveal-shown" class="details" style="display:none">
         <div class="reveal-acts">
-          <a id="btn-search-spotify" class="reveal-act" target="_blank" rel="noopener" title="Search in Spotify">
-            <svg class="icon"><use href="#i-search"/></svg>
-            <span>Search in Spotify</span>
-          </a>
-          <a id="btn-open-spotify" class="reveal-act" target="_blank" rel="noopener" title="Play in Spotify">
-            <svg class="icon"><use href="#i-spotify"/></svg>
-            <span>Play in Spotify</span>
-          </a>
+          <div class="reveal-menu" data-menu="spotify">
+            <button class="reveal-act reveal-act-toggle" type="button" aria-haspopup="true" aria-expanded="false">
+              <svg class="icon"><use href="#i-spotify"/></svg>
+              <span>Open in Spotify</span>
+            </button>
+            <div class="reveal-menu-list" role="menu">
+              <a id="btn-search-spotify" class="reveal-menu-item" target="_blank" rel="noopener" role="menuitem">
+                <svg class="icon"><use href="#i-search"/></svg>
+                <span>Open in Spotify Search</span>
+              </a>
+              <a id="btn-open-spotify" class="reveal-menu-item" target="_blank" rel="noopener" role="menuitem">
+                <svg class="icon"><use href="#i-play"/></svg>
+                <span>Play in Spotify</span>
+              </a>
+            </div>
+          </div>
+          <div class="reveal-menu" data-menu="google">
+            <button class="reveal-act reveal-act-toggle" type="button" aria-haspopup="true" aria-expanded="false">
+              <svg class="icon"><use href="#i-globe"/></svg>
+              <span>Ask Google</span>
+            </button>
+            <div class="reveal-menu-list" role="menu">
+              <a id="btn-google-date" class="reveal-menu-item" target="_blank" rel="noopener" role="menuitem">
+                <svg class="icon"><use href="#i-calendar"/></svg>
+                <span>Release Date</span>
+              </a>
+              <a id="btn-google-general" class="reveal-menu-item" target="_blank" rel="noopener" role="menuitem">
+                <svg class="icon"><use href="#i-search"/></svg>
+                <span>General</span>
+              </a>
+            </div>
+          </div>
         </div>
         <div><span class="label">Song:</span> <span class="song" id="d-name"></span></div>
         <div><span class="label">Artist:</span> <span class="v" id="d-artist"></span></div>

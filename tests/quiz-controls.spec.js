@@ -67,6 +67,59 @@ test('Search-on-Spotify link includes artist and song name', async ({ page }) =>
   );
 });
 
+test('Google "Release Date" link queries "Release Date <artist> <song>"', async ({ page }) => {
+  await page.locator('#btn-show').click();
+  await expect(page.locator('#btn-google-date')).toHaveAttribute(
+    'href', /google\.com\/search\?q=Release%20Date%20Artist%20A%20Song%201$/
+  );
+});
+
+test('Google "General" link queries "<artist> <song>"', async ({ page }) => {
+  await page.locator('#btn-show').click();
+  await expect(page.locator('#btn-google-general')).toHaveAttribute(
+    'href', /google\.com\/search\?q=Artist%20A%20Song%201$/
+  );
+});
+
+// ── Reveal-card dropdown menus ─────────────────────────────────────────────
+
+test('Spotify dropdown toggles open and closed on the toggle button', async ({ page }) => {
+  await page.locator('#btn-show').click();
+  const menu = page.locator('.reveal-menu[data-menu="spotify"]');
+  await menu.locator('.reveal-act-toggle').click();
+  await expect(menu).toHaveClass(/open/);
+  await menu.locator('.reveal-act-toggle').click();
+  await expect(menu).not.toHaveClass(/open/);
+});
+
+test('Opening one dropdown closes the other', async ({ page }) => {
+  await page.locator('#btn-show').click();
+  const spotify = page.locator('.reveal-menu[data-menu="spotify"]');
+  const google  = page.locator('.reveal-menu[data-menu="google"]');
+  await spotify.locator('.reveal-act-toggle').click();
+  await google.locator('.reveal-act-toggle').click();
+  await expect(spotify).not.toHaveClass(/open/);
+  await expect(google).toHaveClass(/open/);
+});
+
+test('Clicking outside the dropdown closes it', async ({ page }) => {
+  await page.locator('#btn-show').click();
+  const menu = page.locator('.reveal-menu[data-menu="spotify"]');
+  await menu.locator('.reveal-act-toggle').click();
+  await expect(menu).toHaveClass(/open/);
+  await page.locator('body').click({ position: { x: 1, y: 1 } });
+  await expect(menu).not.toHaveClass(/open/);
+});
+
+test('Clicking inside the dropdown list does not collapse the reveal card', async ({ page }) => {
+  await page.locator('#btn-show').click();
+  const menu = page.locator('.reveal-menu[data-menu="spotify"]');
+  await menu.locator('.reveal-act-toggle').click();
+  // Click on the dropdown list background (not a link) — should not bubble to reveal-card.
+  await menu.locator('.reveal-menu-list').click({ position: { x: 4, y: 4 } });
+  await expect(page.locator('#reveal-shown')).toBeVisible();
+});
+
 // ── Year-range filtering ────────────────────────────────────────────────────
 
 test('narrowing the year range reduces the available track count', async ({ page }) => {
@@ -485,8 +538,7 @@ test.describe('quiz wiring', () => {
       route.fulfill({ status: 204, body: '' });
     });
     await page.locator('#btn-play').click();
-    await page.waitForTimeout(100);
-    expect(played).toBe(true);
+    await expect.poll(() => played, { timeout: 5000 }).toBe(true);
   });
 
   test('Pause button calls pauseCurrent', async ({ page }) => {
@@ -508,8 +560,9 @@ test.describe('quiz wiring', () => {
       played = true; route.fulfill({ status: 204, body: '' });
     });
     await page.locator('#btn-restart').click();
-    await page.waitForTimeout(100);
-    expect(played).toBe(true);
+    // Poll rather than wait-and-check: in firefox CI, ensurePlayer + the
+    // transfer-playback PUT + the play PUT can exceed 100ms.
+    await expect.poll(() => played, { timeout: 5000 }).toBe(true);
   });
 
   test('Seek buttons call seekDelta', async ({ page }) => {

@@ -152,12 +152,16 @@ function wirePlaylists() {
     quiz.hidden = true;
     setScreen('quiz');
     renderQuiz();
-    // Initialize player early (user gesture), then load tracks
-    ensurePlayer().catch(e => {
+    // Initialize player early (user gesture), then load tracks. Both run in
+    // parallel; if the player init fails, surface the error AFTER the playlist
+    // load settles — otherwise selectCurrentTrack's errorMessage reset
+    // overwrites the player error in races where the playlist finishes second.
+    const playlistPromise = loadQuizPlaylist();
+    ensurePlayer().catch(async e => {
+      await playlistPromise.catch(() => {});
       quiz.errorMessage = 'Player init failed: ' + e.message;
       renderQuiz();
     });
-    loadQuizPlaylist();
   });
   $('#btn-show-spotify-pls').addEventListener('click', openSpotifyPlsModal);
   $('#modal-pls-close').addEventListener('click', () => $('#modal-spotify-pls').classList.remove('active'));
@@ -343,6 +347,34 @@ function wireQuiz() {
   };
   $('#btn-open-spotify').addEventListener('click', onSpotifyLinkClick);
   $('#btn-search-spotify').addEventListener('click', onSpotifyLinkClick);
+  // Reveal-card dropdowns (Open in Spotify / Ask Google). Toggle on click,
+  // close any sibling that was open, and stop propagation so the reveal card
+  // doesn't collapse. A document-level click closes whichever menu is open.
+  $$('.reveal-menu .reveal-act-toggle').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const menu = btn.closest('.reveal-menu');
+      const wasOpen = menu.classList.contains('open');
+      $$('.reveal-menu.open').forEach(m => {
+        m.classList.remove('open');
+        m.querySelector('.reveal-act-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+      if (!wasOpen) {
+        menu.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+  $$('.reveal-menu .reveal-menu-list').forEach(list => {
+    // Item clicks should let the link navigate but not bubble to the reveal card.
+    list.addEventListener('click', e => e.stopPropagation());
+  });
+  document.addEventListener('click', () => {
+    $$('.reveal-menu.open').forEach(m => {
+      m.classList.remove('open');
+      m.querySelector('.reveal-act-toggle')?.setAttribute('aria-expanded', 'false');
+    });
+  });
   $$('[data-seek]').forEach(el => {
     el.addEventListener('click', () => seekDelta(+el.dataset.seek));
   });

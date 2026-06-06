@@ -331,6 +331,9 @@ function renderQuiz() {
     $('#d-date').textContent = quiz.currentTrack.releaseDate || '—';
     $('#btn-open-spotify').href = `https://open.spotify.com/track/${quiz.currentTrack.id}`;
     $('#btn-search-spotify').href = `https://open.spotify.com/search/${encodeURIComponent(quiz.currentTrack.artist + ' ' + quiz.currentTrack.name)}/tracks`;
+    const q = quiz.currentTrack.artist + ' ' + quiz.currentTrack.name;
+    $('#btn-google-date').href = `https://www.google.com/search?q=${encodeURIComponent('Release Date ' + q)}`;
+    $('#btn-google-general').href = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
   }
 
   // Bottom row
